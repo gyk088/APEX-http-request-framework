@@ -28,12 +28,13 @@ public class MyHttpRequestExample extends MyHttpRequest  {
     }
     override public Boolean repeatCondition(HTTPResponse res) {
         // if you need to send a repeat request
-        // rerun request check condition
-        // also you need to set the turn request time in seconds
+        // before sending a repeated request, the condition is checked, which should be described in this method 
+        // also you need to set the repeated request time in seconds
         // MyHttpRequestExample req = new MyHttpRequestExample();
         // req.setRepeatTime(5 * 60) // 5 minutes
         // After 5 minutes will be send a repeat request if this condition return true
         // by default this method return false
+        // if this method return true - the request will be sent continuously after RepeatTime seconds
     }
 }
 ```
@@ -60,7 +61,7 @@ After that you can use your class to send an http request
     myReq.setRepeatTime(5 * 60); // after 5 minutes
 
     // if you need to send a synchronous request
-    // in this case you can get a respose , but methods beforeSend and success or error methods will also be called
+    // in this case you can get a response , but methods beforeSend and success or error methods will also be called
     HTTPResponse myResponse = myReq.executeSync();
 
     // if you need to send an asynchronous request
