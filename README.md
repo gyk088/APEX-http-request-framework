@@ -34,7 +34,7 @@ public class MyHttpRequestExample extends MyHttpRequest  {
         // req.setRepeatTime(5 * 60) // 5 minutes
         // After 5 minutes will be send a repeat request if this condition return true
         // by default this method return false
-        // if this method return true - the request will be sent continuously after RepeatTime seconds
+        // if this method return true - the request will be send continuously after RepeatTime seconds
     }
 }
 ```
