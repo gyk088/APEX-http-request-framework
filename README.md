@@ -37,7 +37,7 @@ public class MyHttpRequestExample extends MyHttpRequest  {
     }
 }
 ```
-After that you can use your class to send a http request
+After that you can use your class to send an http request
 
 ```java
     MyHttpRequestExample myReq = new MyHttpRequestExample();
@@ -56,14 +56,14 @@ After that you can use your class to send a http request
     // if you need to add some headers
     myReq.addHeader('content-type', 'application/json');
 
-    // if you need to send a repeat request in case wich you descride in the repeatCondition method
+    // if you need to send a repeat request in case which you descride in the repeatCondition method
     myReq.setRepeatTime(5 * 60); // after 5 minutes
 
     // if you need to send a synchronous request
     // in this case you can get a respose , but methods beforeSend and success or error methods will also be called
     HTTPResponse myResponse = myReq.executeSync();
 
-    // if you need to send a asynchronous request
+    // if you need to send an asynchronous request
     Id jobID = myReq.executeAsync();
 
     // if you need to schedule a request
