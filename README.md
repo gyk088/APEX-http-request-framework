@@ -28,7 +28,7 @@ public class MyHttpRequestExample extends MyHttpRequest  {
     }
     override public Boolean repeatCondition(HTTPResponse res) {
         // if you need to send a repeat request
-        // before sending a repeated request, the condition is checked, which should be described in this method 
+        // before sending a repeated request, the condition is checked, which should be described in this method
         // also you need to set the repeated request time in seconds
         // MyHttpRequestExample req = new MyHttpRequestExample();
         // req.setRepeatTime(5 * 60) // 5 minutes
@@ -99,7 +99,7 @@ If you don't need to override success error beforeSend and repeatCondition metho
 * `void addQueryParam(String key, String value)`
 * `void addformData(String key, String value)`
 * `void addHeader(String key, String value)`
-* `void setBody(String data)`
+* `void setBody(String body)`
 * `void setRepeatTime(Integer repeatTime)`
 * `HTTPResponse executeSync()`
 * `Id executeAsync()`

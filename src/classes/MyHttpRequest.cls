@@ -37,7 +37,7 @@ public virtual class MyHttpRequest {
         return m.toSchedule();
     }
 
-    public void setBody(String data) {
+    public void setBody(String body) {
         this.body = body;
     }
 
