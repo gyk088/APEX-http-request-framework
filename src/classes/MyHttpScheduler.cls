@@ -11,16 +11,16 @@ public class MyHttpScheduler implements Schedulable {
     }
 
     public Id toSchedule() {
-        if (this.myReq.repeatTime == null) {
+        if (this.myReq.afterSec == null) {
             return null;
         }
 
         Datetime dt = Datetime.now();
-        dt = dt.addSeconds(this.myReq.repeatTime);
+        dt = dt.addSeconds(this.myReq.afterSec);
 
         String sch = dt.second() + ' ' + dt.minute() + ' ' + dt.hour() + ' ' + dt.day() + ' ' +  dt.month() + ' ? ' + dt.year();
 
         Long epoch= dt.getTime();
-        return system.schedule('MyHttpScheduler ' +  epoch, sch, this);
+        return system.schedule('MyHttpScheduler will start at: ' + dt.format('MM/dd/yyyy HH:mm:ss'), sch, this);
     }
 }
