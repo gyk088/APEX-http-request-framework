@@ -2,8 +2,20 @@ public class MyHttpRetryBatch implements Database.Batchable<SObject>, Database.A
     private static final String NAME = 'MyHttpRetryBatch@';
     private static final Integer MAX_CALLOUTS_IN_SINGLE_TRANSACTION = 100;
 
-    public List<MyHttpRequest__b> start(Database.BatchableContext context) {
-        List<MyHttpRequest__b> repeatedRequests = [
+    public enum BatchType { REPEAT, CLEAR, CLEARALL, TEST }
+
+    private BatchType currentType;
+
+    public MyHttpRetryBatch () {
+        this.currentType = BatchType.REPEAT;
+    }
+
+    public MyHttpRetryBatch (string type) {
+        this.currentType = BatchType.valueOf(type);
+    }
+
+    private List<MyHttpRequest__b> getRequestsToRepeat () {
+        return [
             SELECT
                 Url__c, Method__c, Name__c,
                 FormData__c, QueryParam__c, Headers__c,
@@ -12,10 +24,77 @@ public class MyHttpRetryBatch implements Database.Batchable<SObject>, Database.A
             FROM MyHttpRequest__b
             WHERE Repeat__c = 1 AND StartRepeatDate__c < :Datetime.now()
         ];
-        return repeatedRequests;
     }
 
-    public void execute(Database.BatchableContext context, List<MyHttpRequest__b> repeatedRequests) {
+    private List<MyHttpRequest__b> getRequestsToClear () {
+        return [
+            SELECT
+                Repeat__c, StartRepeatDate__c, Name__c
+            FROM MyHttpRequest__b
+            WHERE Repeat__c = 0
+        ];
+    }
+
+    private List<MyHttpRequest__b> getAllRequestsToClear () {
+        return [
+            SELECT
+                Repeat__c, StartRepeatDate__c, Name__c
+            FROM MyHttpRequest__b
+        ];
+    }
+
+    public List<MyHttpRequest__b> start(Database.BatchableContext context) {
+        switch on this.currentType {
+            when REPEAT {
+                return this.getRequestsToRepeat();
+            }
+            when CLEAR {
+                return this.getRequestsToClear();
+            }
+            when CLEARALL {
+                return this.getAllRequestsToClear();
+            }
+            when TEST {
+                return MyHttpMockFactory.getRequestsToTest(MAX_CALLOUTS_IN_SINGLE_TRANSACTION);
+            } when else {
+                return new List<MyHttpRequest__b>();
+            }
+        }
+    }
+
+    public void execute(Database.BatchableContext context, List<MyHttpRequest__b> requests) {
+        switch on this.currentType {
+            when REPEAT {
+                this.repeatRequests(requests);
+            }
+            when CLEAR, CLEARALL {
+                this.clearRequests(requests);
+            } when TEST {
+                this.repeatRequests(requests);
+                this.clearRequests(requests);
+            }
+        }
+    }
+
+    private void clearRequests(List<MyHttpRequest__b> clearRequests) {
+        List<MyHttpRequest__b> requestsToDelete = new List<MyHttpRequest__b>();
+
+        for (MyHttpRequest__b request : clearRequests) {
+            MyHttpRequest__b deleteRequest = new MyHttpRequest__b(
+                Name__c = request.Name__c,
+                StartRepeatDate__c = request.StartRepeatDate__c,
+                Repeat__c = request.Repeat__c
+            );
+
+            requestsToDelete.add(deleteRequest);
+        }
+
+        if (!Test.isRunningTest()) {
+            database.deleteImmediate(requestsToDelete);
+        }
+    }
+
+    private void repeatRequests(List<MyHttpRequest__b> repeatedRequests) {
         List<MyHttpRequest__b> requestsToInsert = new List<MyHttpRequest__b>();
         List<MyHttpRequest__b> requestsToDelete = new List<MyHttpRequest__b>();
 
@@ -59,24 +138,29 @@ public class MyHttpRetryBatch implements Database.Batchable<SObject>, Database.A
             requestsToDelete.add(deleteRequest);
         }
 
-        database.deleteImmediate(requestsToDelete);
-        database.insertImmediate(requestsToInsert);
+        if (!Test.isRunningTest()) {
+            database.deleteImmediate(requestsToDelete);
+            database.insertImmediate(requestsToInsert);
+        }
     }
 
     public void finish(Database.BatchableContext BC) {
-        this.toSchedule();
+        if (!Test.isRunningTest()) {
+            this.toSchedule();
+        }
     }
 
     public Id toSchedule() {
         List<MyHttpRequestSettings__mdt> settings = MyHttpRequestSettings__mdt.getAll().values();
         Integer afterTime = Integer.valueOf(settings[0].RepeatInMin__c);
         if (afterTime == null) {
+            System.debug(System.logginglevel.WARN, 'Cannot schedule batch: set RepeatInMin__c in MyHttpRequestSettings__mdt');
             return null;
         }
 
         Datetime dt = Datetime.now();
         dt = dt.addMinutes(afterTime);
 
-        return system.scheduleBatch(this, 'MyHttpBatch will start at: ' + dt.format('MM/dd/yyyy HH:mm:ss'), afterTime, MAX_CALLOUTS_IN_SINGLE_TRANSACTION);
+        return system.scheduleBatch(this, 'MyHttpBatch (' + this.currentType.name() + ') will start at: ' + dt.format('MM/dd/yyyy HH:mm:ss'), afterTime, MAX_CALLOUTS_IN_SINGLE_TRANSACTION);
     }
 }

@@ -2,6 +2,7 @@
 public class MyHttpRequestTest {
     @isTest
     static void addDataTest() {
+        Test.setMock(HttpCalloutMock.class, new MyHttpMockFactory(200, 'test'));
         MyHttpRequest myReq = new MyHttpRequest();
         myReq.addQueryParam('test', '1');
         myReq.addformData('test', '1');
@@ -10,6 +11,11 @@ public class MyHttpRequestTest {
         myReq.setAfterSec(5 * 60);
         myReq.setUrl('https://test.url');
         myReq.setMethod('get');
+
+        Test.startTest();
+        MyHttpRetryBatch testBatch = new MyHttpRetryBatch('test');
+        testBatch.toSchedule();
+        Test.stopTest();
 
         System.assertEquals(myReq.queryParam.get('test'), '1', 'queryParam is wrong.');
         System.assertEquals(myReq.formData.get('test'), '1', 'formData is wrong.');
@@ -24,28 +30,16 @@ public class MyHttpRequestTest {
     static void initRequestTest() {
         Test.setMock(HttpCalloutMock.class, new MyHttpMockFactory(200, 'test'));
 
-        DateTime dt = Datetime.now();
-        MyHttpRequest__b myReqToInit = new MyHttpRequest__b(
-            Name__c = '0-test',
-            NumberOfAttempts__c = 0,
-            StartRepeatDate__c = dt,
-            LastAttemptDate__c = dt,
-            Url__c = 'https://test.url',
-            Method__c = 'POST',
-            Tik__c = dt,
-            Tok__c = dt,
-            FormData__c = 'test1=1&test2=2',
-            QueryParam__c = 'test1=1&test2=2',
-            Body__c = 'test',
-            Repeat__c = 0,
-            ClassName__c = 'MyHttpRequest',
-            ResponseBody__c = 'test',
-            StatusCode__c = 200
-        );
+        list<MyHttpRequest__b> myReqToInit = MyHttpMockFactory.getRequestsToTest(1);
 
         MyHttpRequest myReq = new MyHttpRequest();
-        myReq.init(myReqToInit);
+        myReq.init(myReqToInit[0]);
         HttpResponse response = myReq.executeSync();
+
+        Test.startTest();
+        MyHttpRetryBatch repeatBatch = new MyHttpRetryBatch();
+        repeatBatch.toSchedule();
+        Test.stopTest();
 
         System.assertEquals(myReq.queryParam.get('test1'), '1', 'queryParam is wrong.');
         System.assertEquals(myReq.queryParam.get('test2'), '2', 'queryParam is wrong.');
@@ -58,14 +52,6 @@ public class MyHttpRequestTest {
 
         System.assertEquals(response.getStatusCode(), 200, 'status code is wrong.');
         System.assertEquals(response.getBody(), 'test', 'body is wrong.');
-    }
-
-    @isTest
-    static void executeBatchTest() {
-        Test.startTest();
-        MyHttpRetryBatch batch = new MyHttpRetryBatch();
-        batch.toSchedule();
-        Test.stopTest();
     }
 
     @isTest
@@ -84,6 +70,8 @@ public class MyHttpRequestTest {
         myReq.executeAsync();
         myReq.executeSchedule();
         myReq.executeSchedule(5);
+        MyHttpRetryBatch clearBatch = new MyHttpRetryBatch('clear');
+        clearBatch.toSchedule();
         Test.stopTest();
 
         System.assertEquals(response.getStatusCode(), 200, 'status code is wrong.');
@@ -98,6 +86,8 @@ public class MyHttpRequestTest {
         HttpResponse response = myReq.executeSync();
 
         Test.startTest();
+        MyHttpRetryBatch clearAllBatch = new MyHttpRetryBatch('clearall');
+        clearAllBatch.toSchedule();
         myReq.executeAsync();
         myReq.executeSchedule();
         myReq.executeSchedule(5);
