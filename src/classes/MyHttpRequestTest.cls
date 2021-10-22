@@ -5,7 +5,7 @@ public class MyHttpRequestTest {
         Test.setMock(HttpCalloutMock.class, new MyHttpMockFactory(200, 'test'));
         MyHttpRequest myReq = new MyHttpRequest();
         myReq.addQueryParam('test', '1');
-        myReq.addformData('test', '1');
+        myReq.addFormData('test', '1');
         myReq.setBody('test');
         myReq.addHeader('content-type', 'application/json');
         myReq.setAfterSec(5 * 60);
@@ -59,8 +59,8 @@ public class MyHttpRequestTest {
         Test.setMock(HttpCalloutMock.class, new MyHttpMockFactory(200, 'test'));
 
         MyHttpRequest myReq = new MyHttpRequest('https://test.url', 'POST');
-        myReq.addformData('test', '1');
-        myReq.addformData('test2', '1');
+        myReq.addFormData('test', '1');
+        myReq.addFormData('test2', '1');
         myReq.addHeader('content-type', 'application/json');
         myReq.addQueryParam('test', '1');
         myReq.setBody('test');

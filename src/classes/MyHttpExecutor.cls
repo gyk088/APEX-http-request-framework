@@ -13,11 +13,11 @@ public class MyHttpExecutor implements Queueable, Database.AllowsCallouts {
         this.executeSync();
     }
 
-    public Id executeAsync () {
+    public Id executeAsync() {
        return System.enqueueJob(this);
     }
 
-    public HTTPResponse executeSync () {
+    public HTTPResponse executeSync() {
         this.prepare();
         Http http = new Http();
 

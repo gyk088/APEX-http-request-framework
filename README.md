@@ -1,19 +1,69 @@
 # APEX http request framework
 ## Overview
 
-This framework allows you to send easy http requests
+This framework allows you to send easy http requests</br>
+This framework has 94% test coverage
 
-**Deploy to Salesforce Org:**
+Framework features:
+* easy way to create http request
+* synchronous requests
+* asynchronous requests
+* scheduled requests
+* repeated requests
+* storing requests and response data in the big object (MyHttpRequest__b)
+
+**Deploy to Salesforce Org:**<br />
 [![Deploy](https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/deploy.png)](https://githubsfdeploy.herokuapp.com/?owner=gyk088&repo=APEX-http-request-framework&ref=master)
 
 ## Usage
-
-Create httpRequest class:
+### Create http request and execute it synchronously:
 
 ```java
-public class MyHttpRequestExample extends MyHttpRequest  {
+    // Create http request object
+    MyHttpRequest myReq = new MyHttpRequest('https://your.url.com', 'GET');
+    // or
+    MyHttpRequest myReq = new MyHttpRequest();
+    myReq.setUrl('https://your.url.com');
+    myReq.setMethod('GET');
+```
+##### Add headers to your http request:
+```java
+    myReq.addHeader('content-type', 'application/json');
+```
+##### Add data to your http request:
+
+```java
+    // if you need to send a request with query string
+    myReq.addQueryParam('example1', '1');
+    myReq.addQueryParam('example2', '2');
+
+    // if you need to send a request with form data parameters
+    myReq.addFormData('example1', '1');
+    myReq.addFormData('example2', '2');
+
+    // if you need to send a request with body
+    myReq.setBody('{"example1": 1, "example2": 2}');
+```
+
+##### Execute your request synchronously:
+```java
+    HTTPResponse myResponse = myReq.executeSync();
+```
+
+### Create http request and execute it asynchronously:
+##### Create a child class:
+If you need to handle http response, you should сreate child class. Otherwise you can use the MyHttpRequest class.
+
+```java
+public class MyHttpRequestExample extends MyHttpRequest {
     public MyHttpRequestExample() {
-        super('https://your.url.com', 'POST');
+        super();
+    }
+    public MyHttpRequestExample(String url, String method) {
+        super(url, method);
+    }
+    override public void beforeSend() {
+        // implement your logic
     }
     override public void success(HTTPResponse res) {
         // if Status Code <= 299
@@ -23,76 +73,125 @@ public class MyHttpRequestExample extends MyHttpRequest  {
        // if Status Code > 299
        // implement your logic
     }
-    override public void beforeSend() {
+    override public void finish(HTTPResponse res) {
         // implement your logic
-    }
-    override public Boolean repeatCondition(HTTPResponse res) {
-        // if you need to send a repeat request
-        // before sending a repeated request, the condition is checked, which should be described in this method
-        // also you need to set the repeated request time in seconds
-        // MyHttpRequestExample req = new MyHttpRequestExample();
-        // req.setRepeatTime(5 * 60) // 5 minutes
-        // After 5 minutes will be send a repeat request if this condition return true
-        // by default this method return false
-        // if this method return true - the request will be send continuously after RepeatTime seconds
     }
 }
 ```
-After that you can use your class to send an http request
+##### Then you can use your class to send an http request:
 
 ```java
-    MyHttpRequestExample myReq = new MyHttpRequestExample();
-
-    // if you need to send a GET request with query parameters
-    myReq.addQueryParam('example1', '1');
-    myReq.addQueryParam('example2', '2');
-
-    // if you need to send a POST request with form data parameters
-    myReq.addformData('example1', '1');
-    myReq.addformData('example2', '2');
-
-    // if you need to send a POST request with body
-    myReq.setBody('{"example1": 1, "example2": 2}');
-
-    // if you need to add some headers
-    myReq.addHeader('content-type', 'application/json');
-
-    // if you need to send a repeat request in case which you descride in the repeatCondition method
-    myReq.setRepeatTime(5 * 60); // after 5 minutes
-
-    // if you need to send a synchronous request
-    // in this case you can get a response , but methods beforeSend and success or error methods will also be called
-    HTTPResponse myResponse = myReq.executeSync();
-
-    // if you need to send an asynchronous request
-    Id jobID = myReq.executeAsync();
-
-    // if you need to schedule a request
-    Id jobID = myReq.executeSchedule(5 * 60); // after 5 minutes
+    MyHttpRequestExample myReq = new MyHttpRequestExample('https://your.url.com', 'GET');
     // or
-    myReq.setRepeatTime(5 * 60); // after 5 minutes
-    Id jobID = myReq.executeSchedule();
+    MyHttpRequestExample myReq = new MyHttpRequestExample();
+    myReq.setUrl('https://your.url.com');
+    myReq.setMethod('POST');
+
+    // also you can add headers and data
+    myReq.addHeader('content-type', 'application/json');
+    myReq.setBody('{"example1": 1, "example2": 2}');
 ```
-If you don't need to override success error beforeSend and repeatCondition methods you can use MyHttpRequest to send simple request
+
+##### Execute your request asynchronously:
+```java
+    Id jobID = myReq.executeAsync();
+```
+
+### Scheduled requests
+##### Create a child class:
+If you need to handle http response, you should сreate child class. Otherwise you can use the MyHttpRequest class.
 ```java
     MyHttpRequest myReq = new MyHttpRequest('https://your.url.com', 'GET');
-
+    // add data
     myReq.addQueryParam('example1', '1');
-    myReq.addQueryParam('example2', '2');
+    // schedule a request in 5 minutes
+    Id jobID = myReq.executeSchedule(5 * 60);
+    // or
+    myReq.setAfterSec(5 * 60); // after 5 minutes
+    Id jobID = myReq.executeSchedule();
+```
+
+### Repeated requests
+##### You have to create your child class and define `repeatCondition` method
+
+If you want to repeat your request, you should create child class.<br />
+In your class you have to define the `repeatCondition` method which must return true or false.<br />
+Until the `repeatCondition` method returns false, your request will repeat every `RepeatInMin__c` minutes.<br />
+The repeat interval is defined in the custom metadata `MyHttpRequestSettings__mdt` in the field `RepeatInMin__c`.<br />
+By default `repeatCondition` method returns false.<br />
+Also you can define `startAfterInMin` field to add a delay before the first repeat.<br />
+By default `startAfterInMin` = 10 minutes.<br />
+
+```java
+public class MyHttpRequestExample extends MyHttpRequest {
+    public Integer startAfterInMin = 20;
+
+    public MyHttpRequestExample() {
+        super();
+    }
+    public MyHttpRequestExample(String url, String method) {
+        super(url, method);
+    }
+    override public void beforeSend() {
+        // implement your logic
+    }
+    override public void success(HTTPResponse res) {
+        // if Status Code <= 299
+        // implement your logic
+    }
+    override public void error(HTTPResponse res) {
+       // if Status Code > 299
+       // implement your logic
+    }
+    override public void finish(HTTPResponse res) {
+        // implement your logic
+    }
+    override public Boolean repeatCondition(HTTPResponse res) {
+        // If this method returns true, the request will be resend
+        // implement your logic
+    }
+}
+```
+##### Then you can use your class to send an http request:
+```java
+    MyHttpRequestExample myReq = new MyHttpRequestExample('https://your.url.com', 'GET');
+    // or
+    MyHttpRequestExample myReq = new MyHttpRequestExample();
+    myReq.setUrl('https://your.url.com');
+    myReq.setMethod('POST');
+
+    // also you can add headers and data
+    myReq.addHeader('content-type', 'application/json');
+    myReq.setBody('{"example1": 1, "example2": 2}');
 
     HTTPResponse myResponse = myReq.executeSync();
     // or
     Id jobID = myReq.executeAsync();
     // or
     Id jobID = myReq.executeSchedule(5 * 60);
+```
+##### Then you have to run `MyHttpRetryBatch`:
+```java
+    MyHttpRetryBatch myHttpRetryBatch = new MyHttpRetryBatch();
     // or
-    myReq.setRepeatTime(5 * 60); // after 5 minutes
-    Id jobID = myReq.executeSchedule();
+    MyHttpRetryBatch myHttpRetryBatch = new MyHttpRetryBatch('repeat');
+    Id jobId = myHttpRetryBatch.toSchedule();
+```
+
+##### Also you can run `MyHttpRetryBatch` to clear your data in the big object (MyHttpRequest__b)
+```java
+    // In this case you clear all requests that do not need to be repeated
+    MyHttpRetryBatch myHttpRetryBatch = new MyHttpRetryBatch('clear');
+    Id jobId = myHttpRetryBatch.toSchedule();
+    // In this case you clear all requests, even those that need to be repeated
+    MyHttpRetryBatch myHttpRetryBatch = new MyHttpRetryBatch('clearall');
+    Id jobId = myHttpRetryBatch.toSchedule();
 ```
 ## Overridable Methods
+* `public void beforeSend()`
 * `public void success(HTTPResponse res)`
 * `public void error(HTTPResponse res)`
-* `public void beforeSend()`
+* `public void finish(HTTPResponse res)`
 * `public Boolean repeatCondition(HTTPResponse res)`
 
 ## Methods to use
@@ -100,8 +199,8 @@ If you don't need to override success error beforeSend and repeatCondition metho
 * `void addformData(String key, String value)`
 * `void addHeader(String key, String value)`
 * `void setBody(String body)`
-* `void setRepeatTime(Integer repeatTime)`
+* `void setAfterSec(Integer afterSec)`
 * `HTTPResponse executeSync()`
 * `Id executeAsync()`
 * `Id executeSchedule()`
-* `Id executeSchedule(Integer repeatTime)`
+* `Id executeSchedule(Integer afterSec)`

@@ -6,15 +6,15 @@ public class MyHttpRetryBatch implements Database.Batchable<SObject>, Database.A
 
     private BatchType currentType;
 
-    public MyHttpRetryBatch () {
+    public MyHttpRetryBatch() {
         this.currentType = BatchType.REPEAT;
     }
 
-    public MyHttpRetryBatch (string type) {
+    public MyHttpRetryBatch(string type) {
         this.currentType = BatchType.valueOf(type);
     }
 
-    private List<MyHttpRequest__b> getRequestsToRepeat () {
+    private List<MyHttpRequest__b> getRequestsToRepeat() {
         return [
             SELECT
                 Url__c, Method__c, Name__c,
@@ -26,7 +26,7 @@ public class MyHttpRetryBatch implements Database.Batchable<SObject>, Database.A
         ];
     }
 
-    private List<MyHttpRequest__b> getRequestsToClear () {
+    private List<MyHttpRequest__b> getRequestsToClear() {
         return [
             SELECT
                 Repeat__c, StartRepeatDate__c, Name__c
@@ -35,7 +35,7 @@ public class MyHttpRetryBatch implements Database.Batchable<SObject>, Database.A
         ];
     }
 
-    private List<MyHttpRequest__b> getAllRequestsToClear () {
+    private List<MyHttpRequest__b> getAllRequestsToClear() {
         return [
             SELECT
                 Repeat__c, StartRepeatDate__c, Name__c
@@ -69,7 +69,8 @@ public class MyHttpRetryBatch implements Database.Batchable<SObject>, Database.A
             }
             when CLEAR, CLEARALL {
                 this.clearRequests(requests);
-            } when TEST {
+            }
+            when TEST {
                 this.repeatRequests(requests);
                 this.clearRequests(requests);
             }

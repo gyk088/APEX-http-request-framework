@@ -93,7 +93,7 @@ public virtual class MyHttpRequest {
         this.queryParam.put(key, value);
     }
 
-    public void addformData(String key, String value) {
+    public void addFormData(String key, String value) {
         this.formData.put(key, value);
     }
 

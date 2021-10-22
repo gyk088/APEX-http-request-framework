@@ -15,7 +15,7 @@ global class MyHttpMockFactory implements HttpCalloutMock {
         return res;
     }
 
-    public static List<MyHttpRequest__b> getRequestsToTest (integer count) {
+    public static List<MyHttpRequest__b> getRequestsToTest(integer count) {
         List<MyHttpRequest__b> myReqList = new List<MyHttpRequest__b>();
         DateTime dt = Datetime.now();
 
