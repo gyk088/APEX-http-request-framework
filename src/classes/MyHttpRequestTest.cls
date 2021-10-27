@@ -14,7 +14,7 @@ public class MyHttpRequestTest {
 
         Test.startTest();
         MyHttpRetryBatch testBatch = new MyHttpRetryBatch('test');
-        testBatch.toSchedule();
+        testBatch.toSchedule(1);
         Test.stopTest();
 
         System.assertEquals(myReq.queryParam.get('test'), '1', 'queryParam is wrong.');
@@ -38,7 +38,7 @@ public class MyHttpRequestTest {
 
         Test.startTest();
         MyHttpRetryBatch repeatBatch = new MyHttpRetryBatch();
-        repeatBatch.toSchedule();
+        repeatBatch.toSchedule(1);
         Test.stopTest();
 
         System.assertEquals(myReq.queryParam.get('test1'), '1', 'queryParam is wrong.');
@@ -71,7 +71,7 @@ public class MyHttpRequestTest {
         myReq.executeSchedule();
         myReq.executeSchedule(5);
         MyHttpRetryBatch clearBatch = new MyHttpRetryBatch('clear');
-        clearBatch.toSchedule();
+        clearBatch.toSchedule(1);
         Test.stopTest();
 
         System.assertEquals(response.getStatusCode(), 200, 'status code is wrong.');
@@ -87,7 +87,7 @@ public class MyHttpRequestTest {
 
         Test.startTest();
         MyHttpRetryBatch clearAllBatch = new MyHttpRetryBatch('clearall');
-        clearAllBatch.toSchedule();
+        clearAllBatch.toSchedule(1);
         myReq.executeAsync();
         myReq.executeSchedule();
         myReq.executeSchedule(5);

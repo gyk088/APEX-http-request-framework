@@ -1,6 +1,6 @@
 public class MyHttpRetryBatch implements Database.Batchable<SObject>, Database.AllowsCallouts {
-    private static final String NAME = 'MyHttpRetryBatch@';
     private static final Integer MAX_CALLOUTS_IN_SINGLE_TRANSACTION = 100;
+    private Integer repeatAfterMin;
 
     public enum BatchType { REPEAT, CLEAR, CLEARALL, TEST }
 
@@ -147,21 +147,21 @@ public class MyHttpRetryBatch implements Database.Batchable<SObject>, Database.A
 
     public void finish(Database.BatchableContext BC) {
         if (!Test.isRunningTest()) {
-            this.toSchedule();
+            this.toSchedule(this.repeatAfterMin);
         }
     }
 
-    public Id toSchedule() {
-        List<MyHttpRequestSettings__mdt> settings = MyHttpRequestSettings__mdt.getAll().values();
-        Integer afterTime = Integer.valueOf(settings[0].RepeatInMin__c);
-        if (afterTime == null) {
+    public Id toSchedule(Integer repeatAfterMin) {
+        this.repeatAfterMin = repeatAfterMin;
+
+        if (repeatAfterMin <= 0) {
             System.debug(System.logginglevel.WARN, 'Cannot schedule batch: set RepeatInMin__c in MyHttpRequestSettings__mdt');
             return null;
         }
 
         Datetime dt = Datetime.now();
-        dt = dt.addMinutes(afterTime);
+        dt = dt.addMinutes(repeatAfterMin);
 
-        return system.scheduleBatch(this, 'MyHttpBatch (' + this.currentType.name() + ') will start at: ' + dt.format('MM/dd/yyyy HH:mm:ss'), afterTime, MAX_CALLOUTS_IN_SINGLE_TRANSACTION);
+        return system.scheduleBatch(this, 'MyHttpBatch (' + this.currentType.name() + ') will start at: ' + dt.format('MM/dd/yyyy HH:mm:ss'), repeatAfterMin, MAX_CALLOUTS_IN_SINGLE_TRANSACTION);
     }
 }

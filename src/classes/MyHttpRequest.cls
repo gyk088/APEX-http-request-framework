@@ -8,6 +8,7 @@ public virtual class MyHttpRequest {
     public Map<String, String> formData { get; private set; }
     public Map<String, String> headers { get; private set; }
     public Integer startAfterInMin = 10;
+    public MyHttpRequest__b request;
 
     public MyHttpRequest() {
         this.headers = new Map<String, String>();
@@ -24,6 +25,7 @@ public virtual class MyHttpRequest {
     }
 
     public void init(MyHttpRequest__b request) {
+        this.request = request;
         this.headers = this.parseDate(request.Headers__c);
         this.queryParam = this.parseDate(request.queryParam__c);
         this.formData = this.parseDate(request.formData__c);

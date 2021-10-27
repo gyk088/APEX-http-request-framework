@@ -22,28 +22,23 @@ public class MyHttpExecutor implements Queueable, Database.AllowsCallouts {
         Http http = new Http();
 
         this.myReq.beforeSend();
-        try {
 
-            DateTime tik = Datetime.now();
-            HTTPResponse res = http.send(this.req);
-            DateTime tok = Datetime.now();
+        DateTime tik = Datetime.now();
+        HTTPResponse res = http.send(this.req);
+        DateTime tok = Datetime.now();
 
-            if (res.getStatusCode() > 299) {
-                this.myReq.error(res);
-            } else {
-                this.myReq.success(res);
-            }
-            this.myReq.finish(res);
-
-            if (this.myReq.id == null) {
-                this.saveRequest(this.myReq.repeatCondition(res), tik, tok, res);
-            }
-
-            return res;
-        } catch (Exception e) {
-            System.debug(System.logginglevel.WARN, 'Cannot execute request: ' + this.myReq.url + '; ' + e.getMessage());
-            return null;
+        if (res.getStatusCode() > 299) {
+            this.myReq.error(res);
+        } else {
+            this.myReq.success(res);
         }
+        this.myReq.finish(res);
+
+        if (this.myReq.id == null) {
+            this.saveRequest(this.myReq.repeatCondition(res), tik, tok, res);
+        }
+
+        return res;
     }
 
     private void saveRequest(Boolean repeat, Datetime tik, Datetime tok, HTTPResponse res) {

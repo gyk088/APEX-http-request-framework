@@ -2,7 +2,7 @@
 ## Overview
 
 This framework allows you to send easy http requests</br>
-This framework has 94% test coverage
+This framework has 95% test coverage
 
 Framework features:
 * easy way to create http request
@@ -116,8 +116,8 @@ If you need to handle http response, you should сreate child class. Otherwise y
 
 If you want to repeat your request, you should create child class.<br />
 In your class you have to define the `repeatCondition` method which must return true or false.<br />
-Until the `repeatCondition` method returns false, your request will repeat every `RepeatInMin__c` minutes.<br />
-The repeat interval is defined in the custom metadata `MyHttpRequestSettings__mdt` in the field `RepeatInMin__c`.<br />
+Until the `repeatCondition` method returns false, your request will repeat every `RepeatInMin` minutes.<br />
+The retry interval is determined when you run the `toSchedule` method in the `MyHttpRetryBatch` class<br />
 By default `repeatCondition` method returns false.<br />
 Also you can define `startAfterInMin` field to add a delay before the first repeat.<br />
 By default `startAfterInMin` = 10 minutes.<br />
@@ -175,19 +175,26 @@ public class MyHttpRequestExample extends MyHttpRequest {
     MyHttpRetryBatch myHttpRetryBatch = new MyHttpRetryBatch();
     // or
     MyHttpRetryBatch myHttpRetryBatch = new MyHttpRetryBatch('repeat');
-    Id jobId = myHttpRetryBatch.toSchedule();
+    // repeat every 10 minutes
+    Id jobId = myHttpRetryBatch.toSchedule(10);
 ```
 
 ##### Also you can run `MyHttpRetryBatch` to clear your data in the big object (MyHttpRequest__b)
 ```java
     // In this case you clear all requests that do not need to be repeated
     MyHttpRetryBatch myHttpRetryBatch = new MyHttpRetryBatch('clear');
-    Id jobId = myHttpRetryBatch.toSchedule();
+    // repeat every 10 minutes
+    Id jobId = myHttpRetryBatch.toSchedule(10);
     // In this case you clear all requests, even those that need to be repeated
     MyHttpRetryBatch myHttpRetryBatch = new MyHttpRetryBatch('clearall');
-    Id jobId = myHttpRetryBatch.toSchedule();
+    // repeat every 10 minutes
+    Id jobId = myHttpRetryBatch.toSchedule(10);
 ```
-## Overridable Methods
+# MyHttpRequest
+## Constructors
+* `public MyHttpRequest()`
+* `public MyHttpRequest(String url, String method)`
+ ## Overridable Methods
 * `public void beforeSend()`
 * `public void success(HTTPResponse res)`
 * `public void error(HTTPResponse res)`
@@ -204,3 +211,10 @@ public class MyHttpRequestExample extends MyHttpRequest {
 * `Id executeAsync()`
 * `Id executeSchedule()`
 * `Id executeSchedule(Integer afterSec)`
+
+# MyHttpRetryBatch
+## Constructors
+* `public MyHttpRetryBatch()`
+* `public MyHttpRetryBatch(string type)`
+## Methods to use
+* `Id toSchedule(Integer repeatAfterMin)`
