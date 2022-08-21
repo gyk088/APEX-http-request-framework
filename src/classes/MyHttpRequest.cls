@@ -1,4 +1,4 @@
-public virtual class MyHttpRequest {
+global virtual class MyHttpRequest {
     public String url { get; private set; }
     public String method { get; private set; }
     public String body { get; private set; }

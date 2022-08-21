@@ -1,0 +1,424 @@
+<template>
+    <!-- TABLE AND TABLE BAR -->
+    <article class="slds-card">
+        <div class="slds-box slds-grid ">
+            <div class="slds-col slds-size_2-of-3">
+                <!-- DATE FROM -->
+                <div class="slds-form__row">
+                    <lightning-input
+                        type="datetime"
+                        value={dateFrom}
+                        onchange={handSelectDate}>
+                    </lightning-input>
+
+                    <div class="slds-form-element slds-m-left_medium">
+                        <label class="slds-form-element__label">Repeat</label>
+                        <div class="slds-form-element__control">
+                            <lightning-input
+                                type="toggle"
+                                value={repeat}
+                                onchange={handleSlesctRepeat}>
+                            </lightning-input>
+                        </div>
+                    </div>
+
+                    <div class="slds-form-element slds-m-left_medium">
+                        <label class="slds-form-element__label">&nbsp;</label>
+                        <div class="slds-form-element__control">
+                            <lightning-button
+                                label='Show'
+                                onclick={loadData}>
+                            </lightning-button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACTIONS -->
+            <div class="slds-col slds-grid slds-grid_align-end">
+                <div class="slds-form-element slds-col">
+                    <label class="slds-form-element__label">Actions</label>
+                    <div class="slds-form-element__control">
+                        <lightning-button-group>
+                            <lightning-button
+                                label='Show all data'
+                                disabled={isSelected}
+                                onclick={handleShowAllData}>
+                            </lightning-button>
+                            <lightning-button
+                                label='Repeat request'
+                                disabled={isSelected}
+                                onclick={handleRepeatRequest}>
+                            </lightning-button>
+                            <lightning-button
+                                label='Create request'
+                                onclick={handleCreateRequest}>
+                            </lightning-button>
+                            <lightning-button
+                                label='Batches Wnd'
+                                onclick={handleOpenRunButchWnd}>
+                            </lightning-button>
+                        </lightning-button-group>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <!-- TABLE -->
+        <div class="myHttpRequestTable" lwc:dom="manual"></div>
+    </article>
+
+    <!-- MODAL REQUEST WND -->
+    <article if:true={showRequestWnd}>
+        <section class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <div class="slds-modal__header">
+                    <h1  class="slds-modal__title slds-hyphenate">{wndTitle}</h1>
+                </div>
+                <!-- BODY -->
+                <div class="slds-modal__content slds-var-p-around_medium">
+                    <!-- ALL DATA -->
+                    <div if:true={showAllData}>
+                        <div class="slds-col slds-size_12-of-12">
+                            <div class="slds-text-body_small">
+                                Id: <b>{selectedRow.Name__c}</b><br>
+                                Response status: <b>{selectedRow.StatusCode__c}</b><br>
+                                Class name: <b>{selectedRow.ClassName__c}</b><br>
+                                Repeat needed: <b>{repeatNeed}</b><br>
+                                Number of requests: <b>{numberOfRequestsSent}</b><br>
+                                Date of last request: <b>{selectedRow.LastAttemptDate__c}</b><br>
+                                Request time: <b>{selectedRow.Tik__c} - {selectedRow.Tok__c}</b><br>
+                            </div>
+                        </div>
+                        <div class="slds-col slds-size_12-of-12">
+                            <lightning-textarea
+                                label="Response Body:"
+                                disabled={disabledWnd}
+                                onchange={handleSetBody}
+                                value={selectedRow.ResponseBody__c}>
+                            </lightning-textarea>
+                        </div>
+                    </div>
+
+                    <!-- FORM -->
+                    <div class="slds-grid">
+                        <div class="slds-col slds-size_2-of-12">
+                            <lightning-combobox
+                                label="Method"
+                                options={httpMethods}
+                                onchange={handleSetHttpMethod}
+                                disabled={disabledWnd}
+                                value={httpMethod}
+                                required>
+                            </lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_10-of-12">
+                            <lightning-input
+                                type="text"
+                                label="Url"
+                                onchange={handleSetUrl}
+                                disabled={disabledWnd}
+                                value={httpUrl}
+                                required></lightning-input>
+                        </div>
+                    </div>
+                    <!-- HEADERS -->
+                    <template for:each={headers} for:item="header">
+                        <div class="slds-grid" key={header.id}>
+                            <div class="slds-col slds-size_5-of-12 slds-p-right_medium">
+                                <lightning-input
+                                    type="text"
+                                    label="Name"
+                                    data-id={header.id}
+                                    value={header.name}
+                                    onchange={handleSetHeaderName}
+                                    disabled={disabledWnd}
+                                ></lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_5-of-12">
+                                <lightning-input
+                                    type="text"
+                                    label="Value"
+                                    data-id={header.id}
+                                    value={header.value}
+                                    onchange={handleSetHeaderValue}
+                                    disabled={disabledWnd}>
+                                </lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_1-of-12"></div>
+                            <div class="slds-col slds-size_1-of-12 slds-form-element">
+                                <label class="slds-form-element__label">&nbsp;</label>
+                                <div class="slds-form-element__control">
+                                    <lightning-button-icon
+                                        icon-name="utility:delete"
+                                        variant="border-filled"
+                                        data-id={header.id}
+                                        title="delete"
+                                        disabled={disabledWnd}
+                                        onclick={handlerDeleteHeader}>
+                                    </lightning-button-icon>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                     <!-- ADD HEADER -->
+                     <div class="slds-grid slds-m-top_medium">
+                        <div class="slds-col slds-size_12-of-12">
+                            <lightning-button
+                                variant="brand"
+                                label="Add Header"
+                                icon-name="utility:add"
+                                icon-position="right"
+                                class="slds-m-left_x-small"
+                                disabled={disabledWnd}
+                                onclick={handlerAddHeader}>
+                            </lightning-button>
+                        </div>
+                    </div>
+                    <!-- QUERY PARAMS -->
+                    <template for:each={queryParams} for:item="queryParam">
+                        <div class="slds-grid" key={queryParam.id}>
+                            <div class="slds-col slds-size_5-of-12 slds-p-right_medium">
+                                <lightning-input
+                                    type="text"
+                                    label="Name"
+                                    data-id={queryParam.id}
+                                    onchange={handleSetQueryParamName}
+                                    value={queryParam.name}
+                                    disabled={disabledWnd}
+                                ></lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_5-of-12">
+                                <lightning-input
+                                    type="text"
+                                    label="Value"
+                                    data-id={queryParam.id}
+                                    onchange={handleSetQueryParamValue}
+                                    value={queryParam.value}
+                                    disabled={disabledWnd}
+                                ></lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_1-of-12"></div>
+                            <div class="slds-col slds-size_1-of-12 slds-form-element">
+                                <label class="slds-form-element__label">&nbsp;</label>
+                                <div class="slds-form-element__control">
+                                    <lightning-button-icon
+                                        icon-name="utility:delete"
+                                        variant="border-filled"
+                                        data-id={queryParam.id}
+                                        title="delete"
+                                        disabled={disabledWnd}
+                                        onclick={handlerDeleteQueryParam}>
+                                    </lightning-button-icon>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                    <!-- ADD QUERY PARAM -->
+                    <div class="slds-grid slds-m-top_medium">
+                        <div class="slds-col slds-size_12-of-12">
+                            <lightning-button
+                                variant="brand"
+                                label="Add Query Parameter"
+                                icon-name="utility:add"
+                                icon-position="right"
+                                class="slds-m-left_x-small"
+                                disabled={disabledWnd}
+                                onclick={handlerAddQueryParam}>
+                            </lightning-button>
+                        </div>
+                    </div>
+                    <!-- FORM DATA -->
+                    <template for:each={formData} for:item="formDataItem">
+                        <div class="slds-grid" key={formDataItem.id}>
+                            <div class="slds-col slds-size_5-of-12 slds-p-right_medium">
+                                <lightning-input
+                                    type="text"
+                                    label="Name"
+                                    data-id={formDataItem.id}
+                                    onchange={handleSetFormDataName}
+                                    disabled={disabledWnd}
+                                    value={formDataItem.name}
+                                ></lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_5-of-12">
+                                <lightning-input
+                                    type="text"
+                                    label="Value"
+                                    data-id={formDataItem.id}
+                                    onchange={handleSetFormDataValue}
+                                    disabled={disabledWnd}
+                                    value={formDataItem.value}
+                                ></lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_1-of-12"></div>
+                            <div class="slds-col slds-size_1-of-12 slds-form-element">
+                                <label class="slds-form-element__label">&nbsp;</label>
+                                <div class="slds-form-element__control">
+                                    <lightning-button-icon
+                                        icon-name="utility:delete"
+                                        variant="border-filled"
+                                        data-id={formDataItem.id}
+                                        title="delete"
+                                        disabled={disabledWnd}
+                                        onclick={handlerDeleteFormData}>
+                                    </lightning-button-icon>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                    <!-- ADD FORM DATA -->
+                    <div class="slds-grid slds-m-top_medium">
+                        <div class="slds-col slds-size_12-of-12">
+                            <lightning-button
+                                variant="brand"
+                                label="Add Form Data"
+                                icon-name="utility:add"
+                                icon-position="right"
+                                class="slds-m-left_x-small"
+                                disabled={disabledWnd}
+                                onclick={handlerAddFormData}>
+                            </lightning-button>
+                        </div>
+                    </div>
+                     <!-- BODY  -->
+                     <div class="slds-col slds-size_12-of-12">
+                        <lightning-textarea
+                            label="Body"
+                            disabled={disabledWnd}
+                            onchange={handleSetBody}
+                            value={httpBody}>
+                        </lightning-textarea>
+                    </div>
+                </div>
+
+                <div class="slds-modal__footer">
+                    <button class="slds-button slds-button_neutral" onclick={handleCloseWnd}>Close</button>
+                    <button
+                        class="slds-button slds-button_brand"
+                        disabled={disabledWnd}
+                        onclick={handleSendRequest}>Send</button>
+                </div>
+            </div>
+          </section>
+          <div class="slds-backdrop slds-backdrop_open"></div>
+    </article>
+
+    <!-- MODAL BATCH WND -->
+    <article if:true={showBatchWnd} disabled>
+        <section class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <div class="slds-modal__header">
+                    <h1  class="slds-modal__title slds-hyphenate">List of batches</h1>
+                </div>
+
+                <div class="slds-modal__content slds-var-p-around_medium">
+                    <!-- BATCH TABLE -->
+                    <table class="slds-table slds-m-bottom_medium">
+                        <thead>
+                            <th scope="col">
+                                <div class="slds-truncate">Batch</div>
+                            </th>
+                            <th scope="col">
+                                <div class="slds-truncate">Action</div>
+                            </th>
+                        </thead>
+                        <tbody>
+                            <template for:each={batches} for:item="batch">
+                                <tr class="slds-hint-parent"  key={batch.id}>
+                                    <th scope="row">
+                                        {batch.CronJobDetail.Name}
+                                    </th>
+                                    <th scope="row">
+                                        <lightning-button-icon
+                                            icon-name="utility:delete"
+                                            variant="border-filled"
+                                            data-id={batch.Id}
+                                            title="delete"
+                                            disabled={disabledWnd}
+                                            onclick={handlerDeleteBatch}>
+                                        </lightning-button-icon>
+                                    </th>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+
+                    <!-- RUN BUTCH FORM -->
+                    <div class="slds-grid slds-gutters">
+                        <div class="slds-col slds-size_3-of-12">
+                            <lightning-combobox
+                                label="Batch type"
+                                options={batchTypes}
+                                onchange={handleSetBatchType}
+                                value={batchType}
+                                disabled={disabledWnd}
+                                required>
+                            </lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_3-of-12">
+                            <lightning-input
+                                type="number"
+                                label="Run in minutes"
+                                onchange={handleSetBatchMin}
+                                value={batchRepeatAfterMin}
+                                disabled={disabledWnd}
+                                required>
+                            </lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_3-of-12">
+                            <div class="slds-form-element">
+                                <label class="slds-checkbox_toggle slds-grid">
+                                  <span class="slds-form-element__label">Repeat</span>
+                                </label>
+                                <div class="slds-form-element__control">
+                                    <lightning-input
+                                        type="toggle"
+                                        value={batchRepeat}
+                                        onchange={handleSetRepeatBatch}>
+                                    </lightning-input>
+                                </div>
+                              </div>
+                        </div>
+                        <div class="slds-col slds-size_3-of-12">
+                            <div class="slds-col slds-size_1-of-12 slds-form-element">
+                                <label class="slds-form-element__label">&nbsp;</label>
+                                <div class="slds-form-element__control">
+                                    <button
+                                        class="slds-button slds-button_brand"
+                                        onclick={handleRunBatch}
+                                        disabled={disabledWnd}>Run</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- HELP TEXT -->
+                    <div class="slds-m-top_large">
+                        <p>There are three types of batches:</p>
+                        <ul>
+                            <li>
+                                <b>Repeat</b> - repeats all requests for which repeat сondition is true
+                            </li>
+                            <li>
+                                <b>Clear</b> - removes all requests for which repeat condition is false
+                            </li>
+                            <li>
+                                <b>ClearAll</b> - removes all requests
+                            </li>
+                        </ul>
+                        <br/>
+                        <p><b>Run in minutes</b> - the batch will run after the set minutes.</p>
+                        <p><b>Repeat</b> - the batch will be run after set minutes and every time repeat after set minutes</p>
+                    </div>
+                </div>
+
+                <div class="slds-modal__footer">
+                    <button class="slds-button slds-button_neutral" onclick={handleCloseWnd}>Close</button>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </article>
+
+</template>

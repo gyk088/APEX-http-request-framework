@@ -13,7 +13,7 @@ public class MyHttpRequestTest {
         myReq.setMethod('get');
 
         Test.startTest();
-        MyHttpRetryBatch testBatch = new MyHttpRetryBatch('test');
+        MyHttpRetryBatch testBatch = new MyHttpRetryBatch('test', true);
         testBatch.toSchedule(1);
         Test.stopTest();
 
@@ -96,5 +96,38 @@ public class MyHttpRequestTest {
         System.assertEquals(response.getStatusCode(), 400, 'status code is wrong.');
         System.assertEquals(response.getBody(), 'test', 'body is wrong.');
     }
-}
 
+    @isTest
+    static void getRequestsTest() {
+
+        Test.startTest();
+            List<MyHttpRequest__b> requests1 = MyHttpController.getRequests(null, false);
+            List<MyHttpRequest__b> requests2 = MyHttpController.getRequests('2022-06-22 13:15:44', false);
+        Test.stopTest();
+
+        System.assertEquals(requests1.size(), 0, 'size is not correct');
+        System.assertEquals(requests2.size(), 0, 'size is not correct');
+    }
+
+    @isTest
+    static void sendRequestTest() {
+        Test.setMock(HttpCalloutMock.class, new MyHttpMockFactory(200, 'test'));
+
+        Test.startTest();
+            MyHttpController.sendRequest('{"url":"https://test.url","method":"GET", "body":"test","headers":[{"name":"test","value":"test"}],"formData":[{"name":"test","value":"test"}],"queryParams":[{"name":"test","value":"test"}]}');
+        Test.stopTest();
+    }
+
+    @isTest
+    static void runBatchTest() {
+        Test.setMock(HttpCalloutMock.class, new MyHttpMockFactory(200, 'test'));
+
+        Test.startTest();
+            MyHttpController.runBatch('REPEAT', 10, false);
+            List<CronTrigger> batches = MyHttpController.getListOfBatches();
+            MyHttpController.stopBatch(batches[0].Id);
+        Test.stopTest();
+
+        System.assertEquals(batches.size(), 1, 'size is not correct');
+    }
+}

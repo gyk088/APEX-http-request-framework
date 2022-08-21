@@ -5,6 +5,7 @@ public class MyHttpRetryBatch implements Database.Batchable<SObject>, Database.A
     public enum BatchType { REPEAT, CLEAR, CLEARALL, TEST }
 
     private BatchType currentType;
+    private Boolean repeat = false;
 
     public MyHttpRetryBatch() {
         this.currentType = BatchType.REPEAT;
@@ -13,6 +14,12 @@ public class MyHttpRetryBatch implements Database.Batchable<SObject>, Database.A
     public MyHttpRetryBatch(string type) {
         this.currentType = BatchType.valueOf(type);
     }
+
+    public MyHttpRetryBatch(string type, Boolean repeat) {
+        this.currentType = BatchType.valueOf(type);
+        this.repeat = repeat;
+    }
+
 
     private List<MyHttpRequest__b> getRequestsToRepeat() {
         return [
@@ -146,18 +153,13 @@ public class MyHttpRetryBatch implements Database.Batchable<SObject>, Database.A
     }
 
     public void finish(Database.BatchableContext BC) {
-        if (!Test.isRunningTest()) {
+        if (this.repeat && !Test.isRunningTest()) {
             this.toSchedule(this.repeatAfterMin);
         }
     }
 
     public Id toSchedule(Integer repeatAfterMin) {
-        this.repeatAfterMin = repeatAfterMin;
-
-        if (repeatAfterMin <= 0) {
-            System.debug(System.logginglevel.WARN, 'Cannot schedule batch: set RepeatInMin__c in MyHttpRequestSettings__mdt');
-            return null;
-        }
+        this.repeatAfterMin = repeatAfterMin <= 0 ? 0 : repeatAfterMin;
 
         Datetime dt = Datetime.now();
         dt = dt.addMinutes(repeatAfterMin);

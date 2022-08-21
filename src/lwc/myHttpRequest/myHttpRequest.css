@@ -1,0 +1,215 @@
+/* START TABLE */
+.myVTable_wrapper {
+    overflow: hidden;
+}
+
+.myVTable_header_wrapper {
+    padding-right: 15px;
+    background-color: rgb(243, 243, 243);
+}
+
+.myVTable_header, .myVTable_table {
+    table-layout: fixed;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.myVTable_header {
+    border-right: 1px solid rgb(200, 200, 200);
+    border-bottom: 1px solid rgb(200, 200, 200);
+    background-color: rgb(243, 243, 243);
+}
+
+.myVTable_header_row {
+    border-top: 1px solid rgb(200, 200, 200);
+}
+
+.myVTable_header_row_cell {
+    border-right: 1px solid rgb(200, 200, 200);
+}
+
+.myVTable_header_row_cell:hover {
+    background-color: rgb(255, 255, 255);
+}
+
+.myVTable_header_row_cell_div_filter,
+.myVTable_header_row_cell_div {
+    font-size: 13px;
+    padding: 8px;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.myVTable_header_row_cell_sort {
+    cursor: pointer;
+}
+
+.myVTable_header_row_cell_sort .myVTable_header_row_cell_wrapper::after {
+    content: "\⇅";
+    font-size: 13px;
+}
+
+.myVTable_header_row_cell_sort_asc .myVTable_header_row_cell_wrapper::after {
+    content: "🠑";
+    font-size: 13px;
+}
+
+.myVTable_header_row_cell_sort_desc .myVTable_header_row_cell_wrapper::after {
+    content: "🠓";
+    font-size: 13px;
+}
+
+.myVTable_header_row_cell_input_filter {
+    border: solid 1px rgb(200, 200, 200);
+    border-radius: 5px;
+    vertical-align: middle;
+    height: 32px;
+}
+
+.myVTable_header_row_cell_input_filter:focus, .myVTable_header_row_cell_input_filter:focus-visible {
+    border-color: rgb(200, 200, 200);
+    outline: none;
+}
+
+.myVTable_header_row {
+    border-bottom: 1px solid rgb(200, 200, 200);
+}
+
+.myVTable_body_wrapper {
+    background-color: #FFF;
+}
+
+.myVTable_body_row {
+    border-bottom: 1px solid rgb(200, 200, 200);
+    cursor: pointer;
+}
+
+.myVTable_body_row:hover {
+    opacity: 0.7;
+}
+
+.myVTable_body_cell_div {
+    font-size: 13px;
+    font-weight: 400;
+    text-align: center;
+}
+
+.myVTable_body_cell {
+    overflow: hidden;
+}
+
+.myVTable_body_row_active {
+    background-color: rgb(243, 243, 243);
+}
+
+.myVTable_no_data, .myVTable_no_loading {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.myVTable_no_loading {
+  z-index: 2;
+  position: absolute;
+  top: 0px;
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+.myVTable_footer_wrapper {
+  width: 100%;
+  background-color: rgb(243, 243, 243);
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+}
+/* END TABLE */
+
+/* START LOADER */
+.lds-roller {
+    display: inline-block;
+    position: relative;
+    width: 80px;
+    height: 80px;
+  }
+  .lds-roller div {
+    animation: lds-roller 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    transform-origin: 40px 40px;
+  }
+  .lds-roller div:after {
+    content: " ";
+    display: block;
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #000;
+    margin: -4px 0 0 -4px;
+  }
+  .lds-roller div:nth-child(1) {
+    animation-delay: -0.036s;
+  }
+  .lds-roller div:nth-child(1):after {
+    top: 63px;
+    left: 63px;
+  }
+  .lds-roller div:nth-child(2) {
+    animation-delay: -0.072s;
+  }
+  .lds-roller div:nth-child(2):after {
+    top: 68px;
+    left: 56px;
+  }
+  .lds-roller div:nth-child(3) {
+    animation-delay: -0.108s;
+  }
+  .lds-roller div:nth-child(3):after {
+    top: 71px;
+    left: 48px;
+  }
+  .lds-roller div:nth-child(4) {
+    animation-delay: -0.144s;
+  }
+  .lds-roller div:nth-child(4):after {
+    top: 72px;
+    left: 40px;
+  }
+  .lds-roller div:nth-child(5) {
+    animation-delay: -0.18s;
+  }
+  .lds-roller div:nth-child(5):after {
+    top: 71px;
+    left: 32px;
+  }
+  .lds-roller div:nth-child(6) {
+    animation-delay: -0.216s;
+  }
+  .lds-roller div:nth-child(6):after {
+    top: 68px;
+    left: 24px;
+  }
+  .lds-roller div:nth-child(7) {
+    animation-delay: -0.252s;
+  }
+  .lds-roller div:nth-child(7):after {
+    top: 63px;
+    left: 17px;
+  }
+  .lds-roller div:nth-child(8) {
+    animation-delay: -0.288s;
+  }
+  .lds-roller div:nth-child(8):after {
+    top: 56px;
+    left: 12px;
+  }
+  @keyframes lds-roller {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+/* END LOADER */
