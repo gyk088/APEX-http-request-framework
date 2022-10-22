@@ -39,6 +39,8 @@
     font-weight: 700;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: flex;
+    justify-content: center;
 }
 
 .myVTable_header_row_cell_sort {
